@@ -15,7 +15,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-level: '20'
+        node-version: '20'
 
     - name: Set up Java
       uses: actions/setup-java@v4
@@ -26,21 +26,35 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Capacitor & Dependencies
+    - name: Install Project Dependencies
       run: |
-        npm init -y
+        cd client
+        npm install
+
+    - name: Build Web Application
+      run: |
+        cd client
+        npm run build
+
+    - name: Initialize Mobile Wrapper
+      run: |
+        cd client
         npm install @capacitor/core @capacitor/cli @capacitor/android
-        npx cap init --name="MyWebRepositoryApp" --app-id="com.example.myapp" --web-dir="."
+        npx cap init "Manus Web App" "com.manus.app" --web-dir="dist"
         npx cap add android
+
+    - name: Sync Production Build
+      run: |
+        cd client
         npx cap sync
 
     - name: Build Android App Bundle (.aab)
       run: |
-        cd android
+        cd client/android
         ./gradlew bundleRelease
-
+        
     - name: Upload .aab Artifact
       uses: actions/upload-artifact@v4
       with:
         name: android-app-bundle
-        path: android/app/build/outputs/bundle/release/app-release-unsigned.aab
+        path: client/android/app/build/outputs/bundle/release/app-release-unsigned.aab
