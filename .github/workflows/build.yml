@@ -1,0 +1,46 @@
+name: Build Android App Bundle
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-level: '20'
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install Capacitor & Dependencies
+      run: |
+        npm init -y
+        npm install @capacitor/core @capacitor/cli @capacitor/android
+        npx cap init --name="MyWebRepositoryApp" --app-id="com.example.myapp" --web-dir="."
+        npx cap add android
+        npx cap sync
+
+    - name: Build Android App Bundle (.aab)
+      run: |
+        cd android
+        ./gradlew bundleRelease
+
+    - name: Upload .aab Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-app-bundle
+        path: android/app/build/outputs/bundle/release/app-release-unsigned.aab
